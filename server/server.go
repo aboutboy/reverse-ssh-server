@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	CONNPORT  = "6666"
-	CONN_TYPE = "tcp"
+	CONNPORT = "6666"
+	CONNTYPE = "tcp"
 )
 
 func main() {
 	// Listen for incoming connections.
-	l, err := net.Listen(CONN_TYPE, ":"+CONNPORT)
+	l, err := net.Listen(CONNTYPE, ":"+CONNPORT)
 	found := false
 	clientReq := " "
 	if err != nil {
